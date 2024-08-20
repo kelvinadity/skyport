@@ -11,7 +11,6 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-// 7gv.png
 async function doesUserExist(username) {
     const users = await db.get('users');
     if (users) {
@@ -54,49 +53,25 @@ async function createUser(username, email, password) {
     }
 }
 
-function askQuestion(question) {
-    return new Promise((resolve) => {
-        rl.question(question, (answer) => {
-            resolve(answer);
-        });
-    });
-}
-
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
 async function main() {
-    while (true) {
-        log.init('Create a new *admin* user for the Skyport Panel:');
-        log.init('You can make regular users from the admin -> users page.');
-        
-        const username = await askQuestion("Username: ");
-        const email = await askQuestion("Email: ");
+    const username = 'admin';
+    const email = 'admin@gmail.com';
+    const password = 'admin';
 
-        if (!isValidEmail(email)) {
-            log.error("Invalid email!");
-            continue;
-        }
+    const userExists = await doesUserExist(username);
+    const emailExists = await doesEmailExist(email);
+    if (userExists || emailExists) {
+        log.error("User already exists!");
+        return;
+    }
 
-        const password = await askQuestion("Password: ");
-
-        const userExists = await doesUserExist(username);
-        const emailExists = await doesEmailExist(email);
-        if (userExists || emailExists) {
-            log.error("User already exists!");
-            continue;
-        }
-
-        try {
-            await createUser(username, email, password);
-            log.info("Done! User created.");
-            rl.close();
-            break;
-        } catch (err) {
-            log.error('Error creating user:', err);
-        }
+    try {
+        await createUser(username, email, password);
+        log.info("Done! User created.");
+    } catch (err) {
+        log.error('Error creating user:', err);
+    } finally {
+        rl.close();
     }
 }
 
